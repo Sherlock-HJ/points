@@ -10,7 +10,7 @@ require_once BASEPATH . "/lib/sqlconn.php";
 
 function randomStr($len)
 {
-    $pattern = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLOMNOPQRSTUVWXYZ+()[]' . time();
+    $pattern = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLOMNOPQRSTUVWXYZ' . time();
     $res = "";
     for ($num = 0; $num < $len; $num++) {
         $res = $res . $pattern[rand(0, strlen($pattern) - 1)];
@@ -115,8 +115,11 @@ function add()
             `id` INT NOT NULL AUTO_INCREMENT , 
             `fcard` TINYTEXT NOT NULL , 
             `tcard` TINYTEXT NOT NULL , 
+            `fbalance` INT NOT NULL , 
+            `tbalance` INT NOT NULL , 
             `amount` INT NOT NULL , 
             `coin_code` TINYTEXT NOT NULL , 
+            `serial` TINYTEXT NOT NULL , 
             `time` INT NOT NULL , 
             PRIMARY KEY (`id`)
             ) ENGINE = InnoDB COMMENT = '{$name} 币明细表'";

@@ -50,6 +50,20 @@ function addcard()
     $coin_code = $_GET["coin_code"];
     $card = $coin_code . randomCard(16);
 
+    $sql = "SELECT id FROM `{$prefix}_coin` WHERE code='{$coin_code}' LIMIT 1";
+    $res = $conn->query($sql);
+    if ($res){
+        if ($res->num_rows == 0){
+            $resp->msg = "币不存在";
+            $resp->code = 4106;
+            $resp->hdie();
+        }
+    }else{
+        $resp->msg = "币查询失败";
+        $resp->code = $_GET["org_id"];
+        $resp->hdie();
+    }
+
     $sql = "SELECT card FROM `{$prefix}_card` WHERE usercode='{$usercode}'  AND coin_code='{$coin_code}' LIMIT 1";
     $res = $conn->query($sql);
 
@@ -204,7 +218,8 @@ function transfer()
     }else{
         $resp->code = 4066;
         $resp->msg = "转账发起失败";
-
+        $resp->cont =$rs;
+        die($rs);
     }
 
     $resp->hecho();
@@ -225,9 +240,11 @@ function transferUpdate()
     $amount = $_GET["amount"];
     $backurl = $_GET["backurl"];
     $serial = $_GET["serial"];
-    //转账记录 添加流水号----Serial
 
     $conn = sqlconn();
+
+
+
 
     $conn->autocommit(false);
 
@@ -237,12 +254,20 @@ function transferUpdate()
     $sql = "UPDATE `{$prefix}_card` SET balance=balance-{$amount} WHERE effe=TRUE AND  card='{$fcard}' ";
     $res1 = $conn->query($sql);
 
-/// fbalance tbalnce 流水号 添加 回调url 
+    $sql = "SELECT balance FROM `{$prefix}_card` WHERE effe=TRUE AND card='{$fcard}'   LIMIT 1";
+    $res3 = $conn->query($sql);
+
+    $fbalance = $res3->fetch_assoc()["balance"];
+
+    $sql = "SELECT balance FROM `{$prefix}_card` WHERE effe=TRUE AND card='{$tcard}'   LIMIT 1";
+    $res4 = $conn->query($sql);
+    $tbalance = $res4->fetch_assoc()["balance"];
+
     $time = time();
-    $sql = "INSERT INTO  `{$prefix}_bill` (fcard,tcard,amount,coin_code,time) VALUES ('{$fcard}','{$tcard}',{$amount},'{$coin_code}',{$time})";
+    $sql = "INSERT INTO  `{$prefix}_bill` (fcard,tcard,fbalance,tbalance,amount,coin_code,serial,time) VALUES ('{$fcard}','{$tcard}',{$fbalance},{$tbalance},{$amount},'{$coin_code}','{$serial}',{$time})";
     $res2 = $conn->query($sql);
 
-    if ($res0 && $res1 && $res2) {
+    if ($res0 && $res1 && $res2&& $res3 && $res4) {
         $conn->commit();
         $resp->msg = "转账成功";
         $resp->ok = true;
@@ -251,8 +276,10 @@ function transferUpdate()
         $jieguo0 = $res0 ? "1" : "0";
         $jieguo1 = $res1 ? "1" : "0";
         $jieguo2 = $res2 ? "1" : "0";
+        $jieguo3 = $res3 ? "1" : "0";
+        $jieguo4 = $res4 ? "1" : "0";
 
-        $resp->msg = "转账失败" . $jieguo0 . $jieguo1 . $jieguo2;
+        $resp->msg = "转账失败-" . $jieguo0 . $jieguo1 . $jieguo2;
         $resp->code = 4018;
     }
 
