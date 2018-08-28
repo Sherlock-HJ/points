@@ -305,11 +305,7 @@ function balance()
         $resp->code = 4020;
         $resp->hdie();
     }
-    if (empty($_GET["pay_pwd"])) {
-        $resp->msg = "请填写pay_pwd";
-        $resp->code = 4021;
-        $resp->hdie();
-    }
+
     if (empty($_GET["card"])) {
         $resp->msg = "请填写card";
         $resp->code = 4022;
@@ -324,11 +320,11 @@ function balance()
     $pay_pwd = md5($_GET["pay_pwd"]);
     $card = $_GET["card"];
 
-    $sql = "SELECT balance,coin_code FROM `{$prefix}_card` WHERE effe=TRUE AND  usercode='{$usercode}' AND card='{$card}' AND pay_pwd='{$pay_pwd}'  LIMIT 1";
+    $sql = "SELECT balance,coin_code FROM `{$prefix}_card` WHERE effe=TRUE AND  usercode='{$usercode}' AND card='{$card}'  LIMIT 1";
     $res = $conn->query($sql);
     if ($res) {
         if ($res->num_rows == 0) {
-            $resp->msg = "卡号或密码不正确";
+            $resp->msg = "卡号不正确";
             $resp->code = 4023;
             $resp->hecho();
         } else {

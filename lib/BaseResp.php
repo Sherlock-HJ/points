@@ -23,9 +23,15 @@ class BaseResp
         $this->code = 200;
     }
     public function hdie(){
-        die(json_encode($this));
+        $res = json_encode($this);
+        clog($_SERVER["REQUEST_URI"]);
+        clog($res);
+        die($res);
     }
     public function hecho(){
-        echo json_encode($this);
+        $res = json_encode($this);
+        clog($_SERVER["REQUEST_URI"]);
+        clog($res);
+        echo $res;
     }
 }

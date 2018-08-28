@@ -5,7 +5,6 @@
  * Date: 2018/8/28
  * Time: 上午8:47
  */
-require_once BASEPATH."/lib/log.php";
 
 function currentDirectory() {
 

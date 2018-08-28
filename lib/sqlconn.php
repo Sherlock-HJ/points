@@ -5,7 +5,6 @@
  * Date: 2018/8/23
  * Time: 下午2:17
  */
-require_once BASEPATH."/lib/BaseResp.php";
 
 function sqlconn()
 {

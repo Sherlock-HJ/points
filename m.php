@@ -13,6 +13,8 @@ define('BASEPATH', dirname(__FILE__));
 define('DEBUG', True);
 
 require_once BASEPATH."/lib/config.php";
+require_once BASEPATH."/lib/log.php";
+require_once BASEPATH."/lib/BaseResp.php";
 
 // 应用入口文件
 date_default_timezone_set("PRC");
