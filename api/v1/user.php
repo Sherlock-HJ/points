@@ -6,6 +6,9 @@
  * Time: 下午4:17
  */
 require_once BASEPATH . "/lib/sqlconn.php";
+require_once BASEPATH . "/lib/net.php";
+
+
 function randomCard($len)
 {
     $pattern = '0123456789' . time();
@@ -125,6 +128,11 @@ function transfer()
         $resp->code = 4012;
         $resp->hdie();
     }
+    if (empty($_GET["backurl"])) {
+        $resp->msg = "请填写backurl";
+        $resp->code = 4052;
+        $resp->hdie();
+    }
 
     $conn = sqlconn();
     $prefix = md5($_GET["org_id"]);
@@ -135,14 +143,17 @@ function transfer()
     $tcard = $_GET["tcard"];
     $amount = $_GET["amount"];
 
-    $sql = "SELECT id FROM `{$prefix}_card` WHERE effe=TRUE AND usercode='{$usercode}'  AND coin_code='{$coin_code}' AND card='{$fcard}' AND pay_pwd = '{$pay_pwd}'  LIMIT 1";
+    $sql = "SELECT balance FROM `{$prefix}_card` WHERE effe=TRUE AND usercode='{$usercode}'  AND coin_code='{$coin_code}' AND card='{$fcard}' AND pay_pwd = '{$pay_pwd}'  LIMIT 1";
     $res = $conn->query($sql);
+
+    $balance = 0;
     if ($res) {
         if ($res->num_rows == 0) {
             $resp->msg = "卡号或密码不正确";
             $resp->code = 4014;
             $resp->hdie();
         }
+        $balance = $res->fetch_assoc()["balance"];
         $res->free_result();
 
     } else {
@@ -152,6 +163,14 @@ function transfer()
             $resp->hdie();
         }
     }
+
+
+    if ($balance < $amount) {
+        $resp->msg = "卡余额不足";
+        $resp->code = 4036;
+        $resp->hdie();
+    }
+
 
     $sql = "SELECT id FROM `{$prefix}_card` WHERE effe=TRUE AND  coin_code='{$coin_code}' AND card='{$tcard}'   LIMIT 1";
     $res = $conn->query($sql);
@@ -168,17 +187,54 @@ function transfer()
         $resp->code = 4017;
         $resp->hdie();
     }
+    $conn->close();
 
+    $params = $_GET;
+    $serial = randomCard(32);
 
+    $params["serial"] = $serial;
 
+    $rs = sendTransferMsg($params);
+
+    $resp->serial = $serial;
+    if ($rs == "1") {
+        $resp->ok = true;
+        $resp->msg = "转账发起成功";
+
+    }else{
+        $resp->code = 4066;
+        $resp->msg = "转账发起失败";
+
+    }
+
+    $resp->hecho();
+
+}
+
+function transferUpdate()
+{
+
+    $resp = new  BaseResp();
+
+    $prefix = md5($_GET["org_id"]);
+    $usercode = $_GET["usercode"];
+    $pay_pwd = md5($_GET["pay_pwd"]);
+    $coin_code = $_GET["coin_code"];
+    $fcard = $_GET["card"];
+    $tcard = $_GET["tcard"];
+    $amount = $_GET["amount"];
+    $backurl = $_GET["backurl"];
+    $serial = $_GET["serial"];
     //转账记录 添加流水号----Serial
+
+    $conn = sqlconn();
 
     $conn->autocommit(false);
 
-    $sql = "UPDATE `{$prefix}_card` SET balance+={$amount} WHERE effe=TRUE AND  card='{$tcard}' ";
+    $sql = "UPDATE `{$prefix}_card` SET balance=balance+{$amount} WHERE effe=TRUE AND  card='{$tcard}' ";
     $res0 = $conn->query($sql);
 
-    $sql = "UPDATE `{$prefix}_card` SET balance-={$amount} WHERE effe=TRUE AND  card='{$fcard}' ";
+    $sql = "UPDATE `{$prefix}_card` SET balance=balance-{$amount} WHERE effe=TRUE AND  card='{$fcard}' ";
     $res1 = $conn->query($sql);
 
 /// fbalance tbalnce 流水号 添加 回调url 
@@ -190,15 +246,20 @@ function transfer()
         $conn->commit();
         $resp->msg = "转账成功";
         $resp->ok = true;
-        $resp->hecho();
     } else {
         $conn->rollback();
-        $resp->msg = "转账失败" . !!$res0 . !!$res1 . !!$res2;
+        $jieguo0 = $res0 ? "1" : "0";
+        $jieguo1 = $res1 ? "1" : "0";
+        $jieguo2 = $res2 ? "1" : "0";
+
+        $resp->msg = "转账失败" . $jieguo0 . $jieguo1 . $jieguo2;
         $resp->code = 4018;
-        $resp->hecho();
     }
 
     $conn->close();
+    $resp->hecho();
+
+    get($backurl . "?" . "serial=" . $serial . "&ok=" . $resp->ok);
 
 }
 
