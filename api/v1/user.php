@@ -169,6 +169,10 @@ function transfer()
         $resp->hdie();
     }
 
+
+
+    //转账记录 添加流水号----Serial
+
     $conn->autocommit(false);
 
     $sql = "UPDATE `{$prefix}_card` SET balance+={$amount} WHERE effe=TRUE AND  card='{$tcard}' ";
@@ -177,6 +181,7 @@ function transfer()
     $sql = "UPDATE `{$prefix}_card` SET balance-={$amount} WHERE effe=TRUE AND  card='{$fcard}' ";
     $res1 = $conn->query($sql);
 
+/// fbalance tbalnce 流水号 添加 回调url 
     $time = time();
     $sql = "INSERT INTO  `{$prefix}_bill` (fcard,tcard,amount,coin_code,time) VALUES ('{$fcard}','{$tcard}',{$amount},'{$coin_code}',{$time})";
     $res2 = $conn->query($sql);

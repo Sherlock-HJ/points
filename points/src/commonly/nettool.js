@@ -7,6 +7,7 @@ function baseurl() {
   let arr =  str.split(xie)
   arr.pop()
   arr.pop()
+  arr.pop()
   return 'http://'+window.location.host+arr.join(xie)+xie
 }
 const baseURL = {
