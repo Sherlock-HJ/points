@@ -147,6 +147,12 @@ function transfer()
         $resp->code = 4052;
         $resp->hdie();
     }
+    if (strpos($_GET["backurl"],'?') ){
+        $resp->msg = "backurl 不可以包含？";
+        $resp->code = 4062;
+        $resp->hdie();
+    }
+
 
     $conn = sqlconn();
     $prefix = md5($_GET["org_id"]);
